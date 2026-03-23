@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Zava",
+    "path": "/Files",
+    "target": {
+      "type": "OneLake",
+      "oneLake": {
+        "path": "Files/Zava",
+        "itemId": "8df74ede-077c-42c0-a4a7-0d9ab6cacb6d",
+        "workspaceId": "8672d685-1aa7-4634-b21a-175eb3334841"
+      }
+    }
+  }
+]
