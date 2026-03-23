@@ -22,9 +22,33 @@
 
 # CELL ********************
 
+%run Common
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
 import os
 
 os.environ["PIPELINE_RUN"] = "True"
+
+# METADATA ********************
+
+# META {
+# META   "language": "python",
+# META   "language_group": "synapse_pyspark"
+# META }
+
+# CELL ********************
+
+from datetime import datetime
+
+start_time = datetime.now()
 
 # METADATA ********************
 
@@ -79,12 +103,30 @@ os.environ["PIPELINE_RUN"] = "True"
 
 # CELL ********************
 
-steps = [CrmCustomersPipelineStep(), CrmProductsPipelineStep(), CrmInventoryPipelineStep(), CrmStoresPipelineStep()]
-for step in steps:
-    step.run()
-    logging.info(f"{step.__class__.__name__} step completed")
+try:
+    result_list = PipelineResultList()
+    status = "Success"
 
-logging.info(f"All steps completed")
+    pipeline_steps = [
+        CrmCustomersPipelineStep(),
+        CrmProductsPipelineStep(),
+        CrmInventoryPipelineStep(),
+        CrmStoresPipelineStep(),
+    ]
+
+    for step in pipeline_steps:
+        result = step.run()
+        result_list.add(result)
+
+        if not result.is_success:
+            raise result.exception
+
+except Exception as ex:
+    status = "Error"
+    logging.error(f"Pipeline failed: {ex}")
+finally:
+    for result in result_list:
+        logging.info(result)
 
 # METADATA ********************
 

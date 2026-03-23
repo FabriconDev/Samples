@@ -33,26 +33,28 @@
 
 # CELL ********************
 
-class CrmCustomersPipelineStep(PipelineStepBase):    
+class CrmCustomersPipelineStep(PipelineStepBase):
     def _get_data(self) -> DataFrame:
         data_df = read_json_file("Files/Zava/customers.json", customers_schema)
         return data_df
 
-    def _write_to_lakehouse(self, df):       
+    def _write_to_lakehouse(self, df):
         df.write \
             .format("delta") \
             .mode("overwrite") \
             .option("overwriteSchema", "true") \
-            .saveAsTable("dbo.Customers")        
+            .saveAsTable("dbo.Customers")
 
-    def run(self) -> bool:
-        result = True        
+    def run(self) -> PipelineResult:
+        result = PipelineResult("CrmCustomersPipelineStep")
+        result.start()
         try:
             df = self._get_data()
             self._write_to_lakehouse(df)
+            result.complete(True, f"Processed {df.count()} records")
         except Exception as ex:
-            result = False
-            print(ex)
+            result.complete(False, str(ex), ex)
+            raise ex
         finally:
             return result
 

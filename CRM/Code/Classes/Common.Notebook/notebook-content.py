@@ -148,6 +148,45 @@ inventory_schema = StructType([
 
 from abc import ABC, abstractmethod
 from pyspark.sql import DataFrame
+from datetime import datetime
+
+
+class PipelineResult:
+    def __init__(self, step_name: str):
+        self.step_name:str = step_name
+        self.is_success:bool = False
+        self.message:str = None
+        self.start_time:datetime = None
+        self.end_time:datetime = None
+        self.exception:Exception = None
+
+    def __str__(self):
+        return f"step_name: {self.step_name}, is_success: {self.is_success}, message: {self.message}, execution_time: {self.end_time - self.start_time}"
+
+    def start(self):
+        self.start_time = datetime.now()
+
+    def complete(self, success: bool, message: str, exception: Exception = None):
+        self.end_time = datetime.now()
+        self.message = message
+        self.is_success = success
+        self.exception = exception
+
+
+class PipelineResultList:
+    def __init__(self):
+        self._results = []
+
+    def add(self, result):
+        if not isinstance(result, PipelineResult):
+            raise TypeError("Only PipelineResult objects can be added.")
+        self._results.append(result)
+
+    def __iter__(self):
+        return iter(self._results)
+
+    def __len__(self):
+        return len(self._results)
 
 
 class PipelineStepBase(ABC):
@@ -155,18 +194,18 @@ class PipelineStepBase(ABC):
 
     @abstractmethod
     def _get_data(self) -> DataFrame:  # A `DataFrame` containing the query results
-        """Method to get data needed to run this pipeline step"""
+        """Mehtod to get data need to run this pipeline step"""
         pass
 
     @abstractmethod
     def _write_to_lakehouse(
         self, df: DataFrame  # A `DataFrame` containing the query results
     ):
-        """Method to write data from this pipeline step to the lakehouse"""
+        """Mehtod to write data from this pipeline step to lakehouse"""
         pass
 
     @abstractmethod
-    def run(self) -> bool:
+    def run(self) -> PipelineResult:
         """Method to run the pipeline step"""
         pass
 
